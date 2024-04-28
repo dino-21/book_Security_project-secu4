@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-5.2.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+		
+           	<!-- Root Context: 다른 모든 웹 컴포넌트에서 사용 가능한 공유 리소스 정의 -->
+	
+	<!-- HikariCP 구성 -->
+	<bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+	    <!-- 데이터베이스 드라이버 클래스와 접속 URL 설정 -->
+		<property name="driverClassName" value="net.sf.log4jdbc.sql.jdbcapi.DriverSpy" />
+	    <property name="jdbcUrl" value="jdbc:log4jdbc:oracle:thin:@localhost:1521:XE" />
+
+	    <!-- 데이터베이스 접속 계정 정보 설정 -->
+	    <property name="username" value="book_ex" />
+	    <property name="password" value="1234" />
+	</bean>
+
+	<!-- HikariCP를 사용한 데이터베이스 커넥션 풀을 생성하는 빈 -->
+	<bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+		<constructor-arg ref="hikariConfig" />
+	</bean>
+	
+		<!-- MyBatis SqlSessionFactoryBean 설정 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+           <!-- mybatis-spring:scan 은 MyBatis와 Spring을 통합할 때 Mapper 인터페이스를 자동으로 찾아 MyBatis에 등록하는 역할 -->
+           <!-- org.zerock.mapper 패키지 내의 MyBatis 매퍼 인터페이스를 자동으로 스캔하는 설정 -->
+	<mybatis-spring:scan	base-package="org.zerock.mapper" />
+	
+	<!-- Component scan 설정 추가 -->
+           <context:component-scan base-package="org.zerock.sample" />
+           
+           <context:component-scan base-package="org.zerock.service" />
+           
+           
+     <!-- AspectJ를 사용하여 AOP를 활성화하고, AspectJ 어드바이스를 포함하는 빈에 대해 자동으로 프록시를 생성하여 횡단 관심사를 적용 -->
+	<aop:aspectj-autoproxy/>
+
+	<!-- org.zerock.aop 패키지를 스캔하여 등록 -->
+	<context:component-scan base-package="org.zerock.aop"/>
+
+     <!-- Component scan 설정 추가 -->
+	<context:component-scan base-package="org.zerock.sample" />
+
+     <!-- 데이터베이스 트랜잭션을 관리하는 데 사용되는 설정, 이 빈은 데이터 소스를 통해 트랜잭션을 관리 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+     <!-- 어노테이션 기반 트랜잭션 처리 활성화 -->
+	<tx:annotation-driven />	
+</beans>
